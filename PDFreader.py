@@ -1,7 +1,7 @@
 import streamlit as st
 import pyttsx3
 import fitz  # PyMuPDF
-import pickle
+import base64
 from io import BytesIO
 
 def text_to_speech(text):
@@ -11,10 +11,10 @@ def text_to_speech(text):
     speaker.setProperty('rate', 150)  # Speed of speech
     speaker.setProperty('volume', 0.9)  # Volume (0.0 to 1.0)
     # Save the speech to an audio file
-    speaker.save_to_file(text, 'speech.mp3')
-    speaker.runAndWait()
-    # Return the path to the audio file
-    return 'speech.mp3'
+    speech_buffer = BytesIO()
+    speaker.save_to_buffer(text, speech_buffer)
+    speech_buffer.seek(0)
+    return speech_buffer
 
 def pdf_to_text(uploaded_file):
     # Read the uploaded file as bytes
@@ -32,7 +32,7 @@ def pdf_to_text(uploaded_file):
     return text
 
 def main():
-    st.title("PDF to Audio Converter")
+    st.title("Audiobook by Abhishek Shaw")
 
     # Create a file uploader widget
     uploaded_file = st.file_uploader("Upload a PDF file")
@@ -40,16 +40,15 @@ def main():
     if uploaded_file is not None:
         # Convert the PDF to text
         text = pdf_to_text(uploaded_file)
-        
-        # Save text to a pickle file
-        with open("text.pickle", "wb") as f:
-            pickle.dump(text, f)
 
         # Convert text to speech and get the audio file path
-        audio_file = text_to_speech(text)
+        audio_buffer = text_to_speech(text)
+
+        # Convert audio buffer to base64
+        audio_bytes = base64.b64encode(audio_buffer.getvalue()).decode('utf-8')
 
         # Display the audio file player
-        st.audio(audio_file)
+        st.audio(audio_bytes, format='audio/mp3')
 
 if __name__ == "__main__":
     main()
