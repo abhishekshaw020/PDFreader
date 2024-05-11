@@ -2,3 +2,4 @@ streamlit
 pyttsx3
 fitz  
 PyMuPDF
+gTTS
